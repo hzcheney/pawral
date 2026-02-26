@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - button "Pawral home" [ref=e5]: P
+    - navigation [ref=e6]:
+      - generic [ref=e7]:
+        - button "Dashboard" [ref=e8]:
+          - img [ref=e9]
+        - generic: Dashboard
+      - generic [ref=e14]:
+        - button "Tasks" [ref=e15]:
+          - img [ref=e16]
+        - generic: Tasks
+      - generic [ref=e19]:
+        - button "Budget" [ref=e20]:
+          - img [ref=e21]
+        - generic: Budget
+      - generic [ref=e24]:
+        - button "PRs" [ref=e25]:
+          - img [ref=e26]
+        - generic: PRs
+      - generic [ref=e30]:
+        - button "Swarm" [ref=e31]:
+          - img [ref=e32]
+        - generic: Swarm
+      - generic [ref=e37]:
+        - button "Settings" [ref=e38]:
+          - img [ref=e39]
+        - generic: Settings
+    - generic [ref=e42]:
+      - generic "Disconnected" [ref=e43]
+      - generic: Gateway Disconnected
+  - generic [ref=e44]:
+    - main [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - heading "Control Center" [level=1] [ref=e49]
+            - generic [ref=e50]: Connecting...
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - button "2x2 layout" [ref=e53]:
+                - img [ref=e54]
+              - button "3x2 layout" [ref=e56]:
+                - img [ref=e57]
+            - button "New Task" [ref=e59]:
+              - img [ref=e60]
+              - text: New Task
+        - generic [ref=e62]: Connecting to server...
+        - generic [ref=e63]:
+          - img [ref=e64]
+          - generic [ref=e67]: No recent activity
+    - contentinfo [ref=e68]:
+      - generic [ref=e71]: "Agent Status: Offline"
+      - generic [ref=e72]: "Workers: 0/0 | Tasks: 0 running, 0 queued | CPU: --% | RAM: --"
+      - generic [ref=e73]:
+        - generic [ref=e74]: v0.1.0
+        - button "Enter fullscreen" [ref=e75]:
+          - img [ref=e76]
+```

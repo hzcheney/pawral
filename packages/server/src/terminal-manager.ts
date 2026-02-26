@@ -38,13 +38,31 @@ export class TerminalManager extends EventEmitter {
         mkdirSync(workspace, { recursive: true });
       }
 
-      const pty = spawn("bash", [], {
-        name: "xterm-256color",
-        cols: 120,
-        rows: 40,
-        cwd: workspace,
-        env: process.env as Record<string, string>,
-      });
+      let pty: IPty;
+      try {
+        pty = spawn("bash", [], {
+          name: "xterm-256color",
+          cols: 120,
+          rows: 40,
+          cwd: workspace,
+          env: process.env as Record<string, string>,
+        });
+      } catch (err) {
+        console.warn(`[${id}] Failed to spawn PTY (${err instanceof Error ? err.message : err}), creating stub worker`);
+        // Create a stub worker without a real PTY — useful for environments where PTY is unavailable
+        const stubWorker: WorkerTerminal = {
+          id,
+          pty: null as unknown as IPty,
+          workspace,
+          status: "idle",
+          phase: "idle",
+          currentTask: null,
+          outputBuffer: "",
+          startedAt: null,
+        };
+        this.workers.set(id, stubWorker);
+        continue;
+      }
 
       const worker: WorkerTerminal = {
         id,
@@ -120,6 +138,7 @@ export class TerminalManager extends EventEmitter {
   exec(workerId: string, command: string): void {
     const worker = this.workers.get(workerId);
     if (!worker) throw new Error(`Worker ${workerId} not found`);
+    if (!worker.pty) throw new Error(`Worker ${workerId} has no PTY (stub worker)`);
     worker.pty.write(command + "\r");
   }
 
@@ -129,6 +148,7 @@ export class TerminalManager extends EventEmitter {
   resize(workerId: string, cols: number, rows: number): void {
     const worker = this.workers.get(workerId);
     if (!worker) throw new Error(`Worker ${workerId} not found`);
+    if (!worker.pty) return; // stub worker, ignore
     worker.pty.resize(cols, rows);
   }
 
@@ -138,6 +158,7 @@ export class TerminalManager extends EventEmitter {
   write(workerId: string, data: string): void {
     const worker = this.workers.get(workerId);
     if (!worker) throw new Error(`Worker ${workerId} not found`);
+    if (!worker.pty) throw new Error(`Worker ${workerId} has no PTY (stub worker)`);
     worker.pty.write(data);
   }
 
@@ -181,7 +202,7 @@ export class TerminalManager extends EventEmitter {
   kill(workerId: string): void {
     const worker = this.workers.get(workerId);
     if (!worker) throw new Error(`Worker ${workerId} not found`);
-    worker.pty.kill();
+    if (worker.pty) worker.pty.kill();
     worker.status = "idle";
     worker.currentTask = null;
     worker.startedAt = null;
@@ -195,7 +216,7 @@ export class TerminalManager extends EventEmitter {
   dispose(): void {
     for (const worker of this.workers.values()) {
       try {
-        worker.pty.kill();
+        if (worker.pty) worker.pty.kill();
       } catch {
         // ignore cleanup errors
       }

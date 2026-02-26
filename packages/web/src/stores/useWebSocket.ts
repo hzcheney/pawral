@@ -3,7 +3,7 @@ import { getGateway, resetGateway } from "../lib/gateway-rpc.ts";
 import { useWorkersStore } from "./workers.ts";
 import { useTasksStore } from "./tasks.ts";
 import { useSettingsStore } from "./settings.ts";
-import type { ActivityEvent, Alert, BudgetSummary } from "../lib/types.ts";
+import type { ActivityEvent, Alert, BudgetSummary, WorkerState, WorkerInfo } from "../lib/types.ts";
 import { create } from "zustand";
 
 const MAX_TERMINAL_LINES = 500;
@@ -71,9 +71,27 @@ export function useWebSocket() {
   useEffect(() => {
     const gateway = gatewayRef.current;
 
+    const mapWorkerInfo = (w: WorkerInfo): WorkerState => ({
+      id: w.id,
+      workspace: w.workspace,
+      status: w.status === "idle" || w.status === "error" ? w.status : "idle",
+      currentTask: null,
+      cost: 0,
+      tokensIn: 0,
+      tokensOut: 0,
+      startedAt: w.startedAt,
+      model: "claude-sonnet-4-6",
+      sessionKey: null,
+    });
+
     const unsubMessage = gateway.onMessage((msg) => {
       switch (msg.type) {
         case "connected":
+          break;
+
+        case "init":
+          setWorkers(msg.workers.map(mapWorkerInfo));
+          setTasks(msg.tasks);
           break;
 
         case "workers.init":
@@ -81,16 +99,16 @@ export function useWebSocket() {
           setWorkers(msg.workers);
           break;
 
-        case "worker.status":
-          updateWorkerStatus(
-            msg.workerId,
-            msg.status,
-            msg.task,
-            msg.cost,
-            msg.tokensIn,
-            msg.tokensOut
-          );
+        case "worker.status": {
+          const phase = msg.phase;
+          const mappedStatus =
+            phase === "idle" || phase === "planning" || phase === "coding" ||
+            phase === "testing" || phase === "pr" || phase === "error"
+              ? phase
+              : "idle";
+          updateWorkerStatus(msg.workerId, mappedStatus, null, 0, 0, 0);
           break;
+        }
 
         case "tasks.list":
           setTasks(msg.tasks);

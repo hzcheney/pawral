@@ -102,14 +102,24 @@ export interface Settings {
   autoPR: boolean;
 }
 
+// Server init worker info (lighter than full WorkerState)
+export interface WorkerInfo {
+  id: string;
+  workspace: string;
+  status: string;
+  currentTaskId: string | null;
+  startedAt: number | null;
+}
+
 // WebSocket protocol messages
 export type ServerMessage =
   | { type: "terminal.data"; workerId: string; data: string }
-  | { type: "worker.status"; workerId: string; status: WorkerStatus; task: Task | null; cost: number; tokensIn: number; tokensOut: number }
+  | { type: "worker.status"; workerId: string; status: string; phase: string }
   | { type: "task.updated"; task: Task }
   | { type: "budget.updated"; budget: BudgetSummary }
   | { type: "activity"; event: ActivityEvent }
   | { type: "alert"; alert: Alert }
+  | { type: "init"; workers: WorkerInfo[]; tasks: Task[] }
   | { type: "workers.init"; workers: WorkerState[] }
   | { type: "workers.list"; workers: WorkerState[] }
   | { type: "tasks.list"; tasks: Task[] }

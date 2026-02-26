@@ -230,6 +230,9 @@ export function createServer(config: ServerConfig): ServerContext {
                 });
               }
               break;
+            case "subscribe":
+              // No-op: server broadcasts to all clients anyway
+              break;
           }
         } catch (err) {
           ws.send(

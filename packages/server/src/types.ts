@@ -216,6 +216,10 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
     type: z.literal("settings.update"),
     settings: SettingsSchema.partial(),
   }),
+  z.object({
+    type: z.literal("subscribe"),
+    channels: z.array(z.string()),
+  }),
 ]);
 
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;
