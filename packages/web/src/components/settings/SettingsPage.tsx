@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useSettingsStore } from "../../stores/settings.ts";
 import { useWorkersStore } from "../../stores/workers.ts";
+import { useConnectionStore } from "../../stores/useWebSocket.ts";
 
 // --- types -------------------------------------------------------------------
 
@@ -163,6 +164,7 @@ function ToggleSwitch({ label, description, checked, onChange }: ToggleSwitchPro
 
 function GatewaySection() {
   const { settings, updateSettings, resetSettings } = useSettingsStore();
+  const connected = useConnectionStore((state) => state.connected);
   const [showToken, setShowToken] = useState(false);
   const [connectionTested, setConnectionTested] = useState(false);
 
@@ -177,9 +179,14 @@ function GatewaySection() {
       <div>
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-text-primary">OpenClaw Gateway</h2>
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent-green/15 px-2.5 py-0.5 text-xs font-medium text-accent-green">
+          <span className={clsx(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+            connected
+              ? "bg-accent-green/15 text-accent-green"
+              : "bg-accent-yellow/15 text-accent-yellow",
+          )}>
             <CheckCircle2 size={12} />
-            CONNECTED
+            {connected ? "CONNECTED" : "DISCONNECTED"}
           </span>
         </div>
         <p className="mt-1 text-sm text-text-secondary">
@@ -193,7 +200,7 @@ function GatewaySection() {
           label="Gateway URL"
           value={settings.gatewayUrl}
           onChange={(v) => updateSettings({ gatewayUrl: v })}
-          placeholder="ws://localhost:18789"
+          placeholder="ws://localhost:3002"
           mono
         />
 

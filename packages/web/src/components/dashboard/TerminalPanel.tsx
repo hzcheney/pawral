@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Maximize2,
   Minimize2,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import type { WorkerState, WorkerStatus } from "../../lib/types.ts";
+import { useConnectionStore } from "../../stores/useWebSocket.ts";
 
 // ---------- Status helpers ----------
 
@@ -47,81 +48,6 @@ const PHASE_PROGRESS: Record<WorkerStatus, number> = {
   error: 0,
 };
 
-// ---------- Demo terminal output ----------
-
-interface TerminalLine {
-  timestamp: string;
-  level: "INFO" | "AGENT" | "EXEC" | "WARN" | "ERROR" | "SUCCESS";
-  text: string;
-}
-
-function makeDemoLines(worker: WorkerState): TerminalLine[] {
-  const now = new Date();
-  const fmt = (offset: number) => {
-    const d = new Date(now.getTime() - offset * 1000);
-    return d.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  };
-
-  const taskTitle = worker.currentTask?.title ?? "unknown";
-
-  switch (worker.status) {
-    case "coding":
-      return [
-        { timestamp: fmt(240), level: "INFO", text: `Initializing '${taskTitle}' task...` },
-        { timestamp: fmt(200), level: "AGENT", text: "Analyzing codebase structure..." },
-        { timestamp: fmt(170), level: "AGENT", text: "Planning implementation approach" },
-        { timestamp: fmt(130), level: "AGENT", text: "Identified 5 files to modify" },
-        { timestamp: fmt(90), level: "EXEC", text: "Writing src/auth/oauth.ts" },
-        { timestamp: fmt(60), level: "EXEC", text: "Writing src/auth/providers/google.ts" },
-        { timestamp: fmt(30), level: "EXEC", text: "Writing src/auth/middleware.ts" },
-        { timestamp: fmt(10), level: "AGENT", text: "Implementing token validation..." },
-      ];
-    case "planning":
-      return [
-        { timestamp: fmt(120), level: "INFO", text: `Initializing '${taskTitle}' task...` },
-        { timestamp: fmt(80), level: "AGENT", text: "Analyzing codebase structure..." },
-        { timestamp: fmt(40), level: "AGENT", text: "Scanning dependency graph..." },
-        { timestamp: fmt(10), level: "AGENT", text: "Planning implementation approach..." },
-      ];
-    case "testing":
-      return [
-        { timestamp: fmt(300), level: "INFO", text: `Initializing '${taskTitle}' task...` },
-        { timestamp: fmt(250), level: "AGENT", text: "Implementation complete. Running tests..." },
-        { timestamp: fmt(200), level: "EXEC", text: "$ npm run test -- --coverage" },
-        { timestamp: fmt(150), level: "INFO", text: "PASS  src/auth/oauth.test.ts (12 tests)" },
-        { timestamp: fmt(100), level: "INFO", text: "PASS  src/auth/middleware.test.ts (8 tests)" },
-        { timestamp: fmt(50), level: "WARN", text: "FAIL  src/auth/providers/google.test.ts (1 failed)" },
-        { timestamp: fmt(20), level: "AGENT", text: "Fixing failing test..." },
-      ];
-    case "pr":
-      return [
-        { timestamp: fmt(180), level: "INFO", text: `Initializing '${taskTitle}' task...` },
-        { timestamp: fmt(140), level: "AGENT", text: "Implementation complete." },
-        { timestamp: fmt(100), level: "EXEC", text: "$ git add . && git commit -m \"feat: implement auth\"" },
-        { timestamp: fmt(70), level: "EXEC", text: "$ git push origin HEAD" },
-        { timestamp: fmt(40), level: "EXEC", text: "$ gh pr create --title \"feat: implement auth\"" },
-        {
-          timestamp: fmt(10),
-          level: "SUCCESS",
-          text: `PR #${worker.currentTask?.prUrl?.split("/").pop() ?? "142"} created successfully`,
-        },
-      ];
-    case "error":
-      return [
-        { timestamp: fmt(300), level: "INFO", text: `Initializing '${taskTitle}' task...` },
-        { timestamp: fmt(240), level: "AGENT", text: "Analyzing codebase structure..." },
-        { timestamp: fmt(180), level: "EXEC", text: "Writing src/ci/pipeline.yml" },
-        { timestamp: fmt(120), level: "EXEC", text: "$ npm run test" },
-        { timestamp: fmt(80), level: "ERROR", text: "FAIL  3 tests failed" },
-        { timestamp: fmt(50), level: "AGENT", text: "Attempting fix... (retry 2/3)" },
-        { timestamp: fmt(20), level: "ERROR", text: worker.currentTask?.errorMessage ?? "Tests failed after 3 attempts" },
-      ];
-    case "idle":
-    default:
-      return [];
-  }
-}
-
 // ---------- Elapsed time helper ----------
 
 function useElapsedTime(startedAt: number | null): string {
@@ -152,37 +78,6 @@ function useElapsedTime(startedAt: number | null): string {
     return `${minutes}m${String(seconds).padStart(2, "0")}s`;
   }
   return `${seconds}s`;
-}
-
-// ---------- Terminal line component ----------
-
-const LEVEL_COLORS: Record<TerminalLine["level"], string> = {
-  INFO: "text-text-secondary",
-  AGENT: "text-accent-blue",
-  EXEC: "text-accent-green",
-  WARN: "text-accent-yellow",
-  ERROR: "text-accent-red",
-  SUCCESS: "text-accent-green",
-};
-
-function TerminalLineRow({ line }: { line: TerminalLine }) {
-  return (
-    <div className="flex gap-2 leading-5">
-      <span className="text-text-muted shrink-0">[{line.timestamp}]</span>
-      <span className={clsx("shrink-0 w-[56px] text-right", LEVEL_COLORS[line.level])}>
-        {line.level}
-      </span>
-      <span
-        className={clsx(
-          "break-all",
-          line.level === "ERROR" ? "text-accent-red" : "text-text-primary",
-          line.level === "SUCCESS" && "text-accent-green font-semibold",
-        )}
-      >
-        {line.text}
-      </span>
-    </div>
-  );
 }
 
 // ---------- Blinking cursor ----------
@@ -216,7 +111,7 @@ interface TerminalPanelProps {
 export function TerminalPanel({ worker, onMaximize, isFullscreen = false }: TerminalPanelProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const elapsed = useElapsedTime(worker.startedAt);
-  const demoLines = useMemo(() => makeDemoLines(worker), [worker.status, worker.id, worker.currentTask?.title]);
+  const lines = useConnectionStore((state) => state.terminalOutput[worker.id] ?? []);
   const progress = PHASE_PROGRESS[worker.status];
 
   // Auto-scroll terminal body to bottom
@@ -224,7 +119,7 @@ export function TerminalPanel({ worker, onMaximize, isFullscreen = false }: Term
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
-  }, [demoLines]);
+  }, [lines]);
 
   const taskTitle = worker.currentTask?.title ?? null;
   const repoName = worker.currentTask?.repo ?? null;
@@ -340,12 +235,16 @@ export function TerminalPanel({ worker, onMaximize, isFullscreen = false }: Term
           "bg-bg-primary",
         )}
       >
-        {worker.status === "idle" ? (
+        {lines.length === 0 && worker.status === "idle" ? (
           <BlinkingCursor />
+        ) : lines.length === 0 ? (
+          <div className="text-text-muted">Waiting for output...</div>
         ) : (
-          <div className="flex flex-col gap-0.5">
-            {demoLines.map((line, i) => (
-              <TerminalLineRow key={`${worker.id}-${i}`} line={line} />
+          <div className="flex flex-col gap-0">
+            {lines.map((line, i) => (
+              <div key={`${worker.id}-${i}`} className="leading-5 text-text-primary whitespace-pre-wrap break-all">
+                {line}
+              </div>
             ))}
             {/* Show cursor after output for active states */}
             {(worker.status === "coding" || worker.status === "planning" || worker.status === "testing") && (

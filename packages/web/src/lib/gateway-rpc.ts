@@ -125,7 +125,7 @@ let instance: GatewayRPC | null = null;
 
 export function getGateway(url?: string): GatewayRPC {
   if (!instance) {
-    instance = new GatewayRPC(url ?? "ws://localhost:18789");
+    instance = new GatewayRPC(url ?? "ws://localhost:3002");
   }
   return instance;
 }

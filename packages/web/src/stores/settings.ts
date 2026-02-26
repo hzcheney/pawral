@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import type { Settings } from "../lib/types.ts";
 
 const defaults: Settings = {
-  gatewayUrl: "ws://localhost:18789",
+  gatewayUrl: "ws://localhost:3002",
   authToken: "",
   workerCount: 6,
   workspaceBase: "~/swarm-workspaces",

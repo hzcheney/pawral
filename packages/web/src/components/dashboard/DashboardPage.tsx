@@ -3,53 +3,39 @@ import { Grid2x2, Grid3x3, Plus, Activity } from "lucide-react";
 import clsx from "clsx";
 import { TerminalGrid, type GridLayout } from "./TerminalGrid.tsx";
 import { useWorkersStore } from "../../stores/workers.ts";
+import { useConnectionStore } from "../../stores/useWebSocket.ts";
 
-// ---------- Demo activity events ----------
+// ---------- Activity icon helpers ----------
 
-interface RecentEvent {
-  id: string;
-  timestamp: string;
-  workerId: string;
-  icon: "success" | "error" | "start" | "info";
-  message: string;
-}
-
-const ICON_CLASSES: Record<RecentEvent["icon"], string> = {
-  success: "text-accent-green",
+const EVENT_TYPE_CLASSES: Record<string, string> = {
+  task_completed: "text-accent-green",
+  pr_created: "text-accent-green",
   error: "text-accent-red",
-  start: "text-accent-blue",
+  task_started: "text-accent-blue",
   info: "text-accent-yellow",
 };
 
-const ICON_SYMBOLS: Record<RecentEvent["icon"], string> = {
-  success: "\u2713",
+const EVENT_TYPE_SYMBOLS: Record<string, string> = {
+  task_completed: "\u2713",
+  pr_created: "\u2713",
   error: "\u2717",
-  start: "\u25B6",
+  task_started: "\u25B6",
   info: "\u25CF",
 };
-
-function makeDemoEvents(): RecentEvent[] {
-  const now = new Date();
-  const fmt = (offset: number) => {
-    const d = new Date(now.getTime() - offset * 60_000);
-    return d.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
-  };
-  return [
-    { id: "e1", timestamp: fmt(2), workerId: "worker-4", icon: "success", message: "PR #142 created" },
-    { id: "e2", timestamp: fmt(5), workerId: "worker-5", icon: "error", message: "Tests failed, retrying" },
-    { id: "e3", timestamp: fmt(8), workerId: "worker-1", icon: "start", message: "Started: Implement OAuth provider" },
-  ];
-}
 
 // ---------- Main component ----------
 
 export function DashboardPage() {
   const [layout, setLayout] = useState<GridLayout>("3x2");
   const workers = useWorkersStore((state) => state.workers);
-  const events = makeDemoEvents();
+  const connected = useConnectionStore((state) => state.connected);
+  const activities = useConnectionStore((state) => state.activities);
 
   const activeCount = workers.filter((w) => w.status !== "idle").length;
   const totalCount = workers.length;
+
+  // Show the most recent 5 activities in the bottom strip
+  const recentActivities = activities.slice(0, 5);
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -58,9 +44,15 @@ export function DashboardPage() {
         {/* Left */}
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-semibold text-text-primary">Control Center</h1>
-          <span className="text-xs text-text-secondary font-mono">
-            {activeCount}/{totalCount} active
-          </span>
+          {!connected ? (
+            <span className="text-xs text-accent-yellow font-mono">Connecting...</span>
+          ) : totalCount === 0 ? (
+            <span className="text-xs text-text-muted font-mono">No workers</span>
+          ) : (
+            <span className="text-xs text-text-secondary font-mono">
+              {activeCount}/{totalCount} active
+            </span>
+          )}
         </div>
 
         {/* Right */}
@@ -103,21 +95,44 @@ export function DashboardPage() {
 
       {/* Terminal grid */}
       <div className="flex-1 p-2 min-h-0">
-        <TerminalGrid layout={layout} />
+        {!connected ? (
+          <div className="flex items-center justify-center h-full text-sm text-text-muted">
+            Connecting to server...
+          </div>
+        ) : totalCount === 0 ? (
+          <div className="flex items-center justify-center h-full text-sm text-text-muted">
+            No workers available. Workers will appear when the server sends data.
+          </div>
+        ) : (
+          <TerminalGrid layout={layout} />
+        )}
       </div>
 
       {/* Activity feed strip */}
       <div className="flex items-center gap-1 h-8 px-4 bg-bg-secondary border-t border-border-default shrink-0 overflow-hidden">
         <Activity size={12} className="text-text-muted shrink-0" />
         <div className="flex items-center gap-4 min-w-0 overflow-hidden">
-          {events.map((event) => (
-            <div key={event.id} className="flex items-center gap-1.5 text-[11px] shrink-0">
-              <span className="text-text-muted font-mono">{event.timestamp}</span>
-              <span className="text-text-secondary font-mono">{event.workerId}</span>
-              <span className={ICON_CLASSES[event.icon]}>{ICON_SYMBOLS[event.icon]}</span>
-              <span className="text-text-secondary truncate max-w-[200px]">{event.message}</span>
-            </div>
-          ))}
+          {recentActivities.length === 0 ? (
+            <span className="text-[11px] text-text-muted">No recent activity</span>
+          ) : (
+            recentActivities.map((event) => {
+              const ts = new Date(event.timestamp).toLocaleTimeString("en-US", {
+                hour12: false,
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <div key={event.id} className="flex items-center gap-1.5 text-[11px] shrink-0">
+                  <span className="text-text-muted font-mono">{ts}</span>
+                  <span className="text-text-secondary font-mono">{event.workerId}</span>
+                  <span className={EVENT_TYPE_CLASSES[event.type] ?? "text-text-muted"}>
+                    {EVENT_TYPE_SYMBOLS[event.type] ?? "\u25CF"}
+                  </span>
+                  <span className="text-text-secondary truncate max-w-[200px]">{event.message}</span>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

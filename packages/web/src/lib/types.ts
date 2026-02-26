@@ -110,6 +110,7 @@ export type ServerMessage =
   | { type: "budget.updated"; budget: BudgetSummary }
   | { type: "activity"; event: ActivityEvent }
   | { type: "alert"; alert: Alert }
+  | { type: "workers.init"; workers: WorkerState[] }
   | { type: "workers.list"; workers: WorkerState[] }
   | { type: "tasks.list"; tasks: Task[] }
   | { type: "connected"; sessionId: string };

@@ -3,52 +3,32 @@ import { getGateway, resetGateway } from "../lib/gateway-rpc.ts";
 import { useWorkersStore } from "./workers.ts";
 import { useTasksStore } from "./tasks.ts";
 import { useSettingsStore } from "./settings.ts";
-import type { ActivityEvent, Alert } from "../lib/types.ts";
+import type { ActivityEvent, Alert, BudgetSummary } from "../lib/types.ts";
 import { create } from "zustand";
+
+const MAX_TERMINAL_LINES = 500;
 
 interface ConnectionStore {
   connected: boolean;
   activities: ActivityEvent[];
   alerts: Alert[];
+  budget: BudgetSummary | null;
+  terminalOutput: Record<string, string[]>;
   setConnected: (v: boolean) => void;
   addActivity: (e: ActivityEvent) => void;
   addAlert: (a: Alert) => void;
   dismissAlert: (id: string) => void;
+  setBudget: (budget: BudgetSummary) => void;
+  appendTerminalData: (workerId: string, data: string) => void;
+  clearTerminal: (workerId: string) => void;
 }
 
 export const useConnectionStore = create<ConnectionStore>((set) => ({
   connected: false,
-  activities: [
-    {
-      id: "act-1",
-      timestamp: Date.now() - 60000,
-      workerId: "worker-1",
-      type: "pr_created",
-      message: "PR #142 created: feat: add Google OAuth provider",
-    },
-    {
-      id: "act-2",
-      timestamp: Date.now() - 120000,
-      workerId: "worker-5",
-      type: "error",
-      message: "Tests failed, retrying (attempt 3/3)",
-    },
-    {
-      id: "act-3",
-      timestamp: Date.now() - 180000,
-      workerId: "worker-2",
-      type: "task_started",
-      message: "Started: task-002 Add SAML authentication",
-    },
-    {
-      id: "act-4",
-      timestamp: Date.now() - 240000,
-      workerId: "worker-4",
-      type: "task_completed",
-      message: "Completed: task-005 Fix README typo",
-    },
-  ],
+  activities: [],
   alerts: [],
+  budget: null,
+  terminalOutput: {},
   setConnected: (connected) => set({ connected }),
   addActivity: (e) =>
     set((state) => ({
@@ -62,13 +42,29 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
     set((state) => ({
       alerts: state.alerts.filter((a) => a.id !== id),
     })),
+  setBudget: (budget) => set({ budget }),
+  appendTerminalData: (workerId, data) =>
+    set((state) => {
+      const existing = state.terminalOutput[workerId] ?? [];
+      // Split incoming data by newlines and append
+      const newLines = data.split("\n");
+      const combined = [...existing, ...newLines].slice(-MAX_TERMINAL_LINES);
+      return {
+        terminalOutput: { ...state.terminalOutput, [workerId]: combined },
+      };
+    }),
+  clearTerminal: (workerId) =>
+    set((state) => ({
+      terminalOutput: { ...state.terminalOutput, [workerId]: [] },
+    })),
 }));
 
 export function useWebSocket() {
   const { settings } = useSettingsStore();
   const { updateWorkerStatus, setWorkers } = useWorkersStore();
   const { updateTask, setTasks } = useTasksStore();
-  const { setConnected, addActivity, addAlert } = useConnectionStore();
+  const { setConnected, addActivity, addAlert, setBudget, appendTerminalData } =
+    useConnectionStore();
   const gatewayRef = useRef(getGateway(settings.gatewayUrl));
   const [isConnected, setIsConnected] = useState(false);
 
@@ -80,6 +76,7 @@ export function useWebSocket() {
         case "connected":
           break;
 
+        case "workers.init":
         case "workers.list":
           setWorkers(msg.workers);
           break;
@@ -101,6 +98,14 @@ export function useWebSocket() {
 
         case "task.updated":
           updateTask(msg.task.id, msg.task);
+          break;
+
+        case "budget.updated":
+          setBudget(msg.budget);
+          break;
+
+        case "terminal.data":
+          appendTerminalData(msg.workerId, msg.data);
           break;
 
         case "activity":
