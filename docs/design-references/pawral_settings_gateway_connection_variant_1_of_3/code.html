@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pawral Settings: Gateway Connection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#197fe6",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#0d1117", // GitHub-style dark
+                        "content-dark": "#161b22",
+                        "border-dark": "#30363d",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono-text { font-family: 'JetBrains Mono', monospace; }
+        .sidebar-active { border-left: 2px solid #197fe6; background-color: rgba(25, 127, 230, 0.1); }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
+<!-- Sidebar -->
+<aside class="w-[240px] border-r border-border-dark flex flex-col h-screen sticky top-0 bg-background-dark">
+<div class="p-6 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white">smart_toy</span>
+</div>
+<div>
+<h1 class="text-lg font-bold leading-none">Pawral</h1>
+<p class="text-xs text-slate-400">AI Coding Agent</p>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="sidebar-active flex items-center gap-3 px-3 py-2 rounded-sm text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]">link</span>
+<span class="text-sm font-medium">Gateway Connection</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-slate-800 transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Workers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-slate-800 transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+<span class="text-sm font-medium">Budget</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-slate-800 transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined text-[20px]">vpn_key</span>
+<span class="text-sm font-medium">API Keys</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-slate-800 transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined text-[20px]">extension</span>
+<span class="text-sm font-medium">Integrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-slate-800 transition-colors text-slate-400" href="#">
+<span class="material-symbols-outlined text-[20px]">shield</span>
+<span class="text-sm font-medium">Security</span>
+</a>
+</nav>
+<div class="p-4 mt-auto">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold py-2 px-4 rounded transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Project</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 bg-content-dark min-h-screen overflow-y-auto">
+<header class="h-16 border-b border-border-dark flex items-center px-8 bg-background-dark/50 backdrop-blur-sm sticky top-0 z-10">
+<h2 class="text-lg font-semibold">Settings › Gateway Connection</h2>
+</header>
+<div class="max-w-4xl p-8 space-y-10">
+<!-- Header Section -->
+<section>
+<h3 class="text-2xl font-bold mb-2">Gateway Connection</h3>
+<p class="text-slate-400 max-w-2xl">Configure your OpenClaw Gateway and worker orchestration settings to enable remote coding execution.</p>
+</section>
+<!-- OpenClaw Gateway Section -->
+<section class="space-y-6">
+<div class="flex items-center justify-between border-b border-border-dark pb-4">
+<h4 class="text-xl font-bold">OpenClaw Gateway</h4>
+<div class="flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/20">
+<span class="material-symbols-outlined text-[16px] fill-current">check_circle</span>
+<span class="text-xs font-bold uppercase tracking-wider">Connected</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300">Gateway URL</label>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm mono-text focus:ring-primary focus:border-primary" type="text" value="https://gateway.pawral.ai/v1/socket"/>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300">Auth Token</label>
+<div class="relative">
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm mono-text focus:ring-primary focus:border-primary pr-10" type="password" value="pk_live_pawral_993kks928shH"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary/20 hover:bg-primary/30 text-primary text-sm font-bold px-4 py-2 rounded-lg border border-primary/30 transition-all">
+                        Test Connection
+                    </button>
+<button class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-bold px-4 py-2 rounded-lg border border-border-dark transition-all">
+                        Reconnect
+                    </button>
+</div>
+</section>
+<!-- Worker Configuration Section -->
+<section class="space-y-6">
+<div class="border-b border-border-dark pb-4">
+<h4 class="text-xl font-bold">Worker Configuration</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300">Active Workers</label>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm mono-text focus:ring-primary focus:border-primary" type="number" value="6"/>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-300">Default Model</label>
+<div class="relative">
+<select class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm appearance-none focus:ring-primary focus:border-primary">
+<option>claude-sonnet-4-6</option>
+<option>gpt-4o-2024-05-13</option>
+<option>gemini-1.5-pro</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="block text-sm font-medium text-slate-300">Workspace Path</label>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm mono-text focus:ring-primary focus:border-primary" placeholder="/var/www/pawral/workspace" type="text" value="/home/user/projects/pawral-agent"/>
+</div>
+</div>
+<div class="space-y-4 pt-2">
+<label class="flex items-center justify-between cursor-pointer group">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-200">Auto-sandbox environment</span>
+<span class="text-xs text-slate-400">Isolate worker processes in Docker containers</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-200">Enable Orchestrator</span>
+<span class="text-xs text-slate-400">Allow master node to distribute tasks among workers</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+</div>
+</section>
+<!-- Action Buttons -->
+<footer class="flex items-center gap-4 pt-10 border-t border-border-dark">
+<button class="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-8 rounded-lg transition-all">
+                    Save Changes
+                </button>
+<button class="text-slate-400 hover:text-slate-200 font-medium py-2.5 px-6 rounded-lg transition-all border border-transparent hover:border-border-dark">
+                    Reset to Defaults
+                </button>
+</footer>
+</div>
+</main>
+</body></html>

@@ -106,7 +106,7 @@ OpenClaw 已经原生支持我们需要的所有编排能力：
 
 **openclaw.json (核心配置)**
 
-```json5
+```json
 {
   agents: {
     defaults: {
@@ -290,7 +290,7 @@ Frontend轮询 sessions.list 获取worker状态
 - 批量导入：粘贴多行任务描述
 
 **任务数据模型**
-```typescript
+```javascript
 interface Task {
   id: string;
   title: string;

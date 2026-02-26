@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#238636",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#0d1117",
+                        "surface-dark": "#161b22",
+                        "border-dark": "#30363d",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<title>New Task Modal Variant 1 - Pawral</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center p-4">
+<!-- Modal Overlay -->
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+<!-- Modal Container -->
+<div class="w-full max-w-[560px] bg-surface-dark border border-border-dark rounded-xl shadow-2xl flex flex-col overflow-hidden">
+<!-- Header -->
+<div class="flex items-center justify-between px-6 py-4 border-b border-border-dark">
+<div class="flex items-center gap-3">
+<div class="size-6 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight">New Task</h2>
+</div>
+<button class="text-slate-400 hover:text-slate-100 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Body -->
+<div class="p-6 flex flex-col gap-4 overflow-y-auto max-h-[70vh]">
+<!-- Task Title -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Task Title</label>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-slate-600" placeholder="e.g. Implement OAuth provider" type="text"/>
+</div>
+<!-- Description / Prompt -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Description / Prompt</label>
+<textarea class="w-full min-h-[120px] bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-slate-600 resize-none" placeholder="Describe the feature or bug in detail..."></textarea>
+</div>
+<!-- Repository & Branch Prefix -->
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Repository</label>
+<select class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+<option>my-app</option>
+<option>backend-api</option>
+<option>worker-service</option>
+</select>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Branch Prefix</label>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="swarm/"/>
+</div>
+</div>
+<!-- Priority & Model -->
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Priority</label>
+<div class="relative">
+<select class="w-full bg-background-dark border border-border-dark rounded-lg pl-9 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+<option>High</option>
+<option selected="">Medium</option>
+<option>Low</option>
+</select>
+<div class="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Model</label>
+<select class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+<option>Auto (Recommended)</option>
+<option>claude-3-5-sonnet</option>
+<option>gpt-4o</option>
+<option>deepseek-v3</option>
+</select>
+</div>
+</div>
+<!-- Budget & Auto PR -->
+<div class="grid grid-cols-2 gap-4 items-end">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Budget Limit</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+<input class="w-full bg-background-dark border border-border-dark rounded-lg pl-8 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="5.00" type="number"/>
+</div>
+</div>
+<div class="flex items-center justify-between bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 h-[42px]">
+<span class="text-sm text-slate-300">Auto PR</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Dependencies -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Dependencies</label>
+<div class="flex flex-wrap gap-2 p-2 bg-background-dark border border-border-dark rounded-lg min-h-[42px]">
+<span class="flex items-center gap-1.5 bg-primary/20 text-primary-400 border border-primary/30 px-2 py-0.5 rounded-md text-xs font-medium">
+                            auth-service <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="flex items-center gap-1.5 bg-primary/20 text-primary-400 border border-primary/30 px-2 py-0.5 rounded-md text-xs font-medium">
+                            redis-client <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm p-0 min-w-[120px] placeholder:text-slate-600" placeholder="Add dependency..." type="text"/>
+</div>
+</div>
+<!-- Assign to Worker -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-300">Assign to Worker</label>
+<div class="relative">
+<select class="w-full bg-background-dark border border-border-dark rounded-lg pl-9 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all appearance-none cursor-pointer">
+<option>worker-1 (available)</option>
+<option>worker-2 (busy)</option>
+<option>worker-3 (available)</option>
+<option>worker-4 (offline)</option>
+</select>
+<div class="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-green-500"></div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="px-6 py-4 border-t border-border-dark flex items-center justify-between">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="w-4 h-4 rounded border-border-dark bg-background-dark text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/>
+<span class="text-xs text-slate-400 group-hover:text-slate-300">Create another after this</span>
+</label>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                        Cancel
+                    </button>
+<button class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
+                        Create Task
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>
