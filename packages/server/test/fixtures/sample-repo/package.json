@@ -1,0 +1,11 @@
+{
+  "name": "sample-repo",
+  "version": "1.0.0",
+  "description": "A sample repository for testing",
+  "dependencies": {
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
