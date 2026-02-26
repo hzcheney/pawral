@@ -2,8 +2,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Settings } from "../lib/types.ts";
 
+function getDefaultGatewayUrl(): string {
+  if (typeof window === "undefined") return "ws://localhost:3002";
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/ws`;
+}
+
 const defaults: Settings = {
-  gatewayUrl: "ws://localhost:3002",
+  gatewayUrl: getDefaultGatewayUrl(),
   authToken: "",
   workerCount: 6,
   workspaceBase: "~/swarm-workspaces",
