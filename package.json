@@ -23,13 +23,15 @@
     "prepare": "git config core.hooksPath git-hooks || true"
   },
   "devDependencies": {
-    "oxlint": "latest",
-    "oxfmt": "latest",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.15.0",
-    "tsx": "^4.19.0"
+    "@vitest/coverage-v8": "^3.2.4",
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "playwright": "^1.58.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
