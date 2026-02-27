@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Pre-push hook: scan staged commits for secrets before pushing to public repos.
+# Patterns: API keys, tokens, passwords, private keys, connection strings.
+
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# ── Check if repo is public ──────────────────────────────────────────────────
+check_public_repo() {
+  local remote_url
+  remote_url=$(git remote get-url origin 2>/dev/null || echo "")
+
+  # Extract owner/repo from SSH or HTTPS URL
+  local repo_path=""
+  if [[ "$remote_url" == *"github.com"* ]]; then
+    repo_path=$(echo "$remote_url" | sed -E 's|.*github\.com[:/](.+)(\.git)?$|\1|' | sed 's/\.git$//')
+  else
+    # Not GitHub — skip check
+    return 1
+  fi
+
+  # Query GitHub API (unauthenticated, works for public repos)
+  local visibility
+  visibility=$(curl -sf "https://api.github.com/repos/${repo_path}" 2>/dev/null | grep -o '"private":[^,]*' | head -1 || echo "")
+
+  if [[ "$visibility" == '"private":false' ]]; then
+    return 0  # Public
+  fi
+  return 1  # Private or unknown
+}
+
+# ── Secret patterns ──────────────────────────────────────────────────────────
+SECRET_PATTERNS=(
+  # Generic API keys & tokens
+  '["\x27]?[A-Za-z0-9_-]{20,}["\x27]?\s*$'  # Catch-all for long strings (too noisy, skip)
+
+  # Specific high-signal patterns
+  'AKIA[0-9A-Z]{16}'                          # AWS Access Key
+  'sk-[a-zA-Z0-9]{20,}'                       # OpenAI / Stripe secret key
+  'sk-ant-[a-zA-Z0-9-]{20,}'                  # Anthropic API key
+  'ghp_[a-zA-Z0-9]{36}'                       # GitHub PAT (fine-grained)
+  'github_pat_[a-zA-Z0-9_]{20,}'              # GitHub PAT (new format)
+  'gho_[a-zA-Z0-9]{36}'                       # GitHub OAuth token
+  'glpat-[a-zA-Z0-9_-]{20,}'                  # GitLab PAT
+  'xoxb-[0-9]+-[a-zA-Z0-9]+'                  # Slack bot token
+  'xoxp-[0-9]+-[a-zA-Z0-9]+'                  # Slack user token
+  'ntn_[a-zA-Z0-9]{30,}'                      # Notion integration token
+  'Bearer [a-zA-Z0-9._-]{20,}'                # Bearer tokens
+  'eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}' # JWT tokens
+
+  # Private keys
+  '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
+  '-----BEGIN PGP PRIVATE KEY BLOCK-----'
+
+  # Connection strings & passwords
+  'password\s*[:=]\s*["][^"]{8,}'              # password = "..."
+  'passwd\s*[:=]\s*["][^"]{8,}'
+  'secret\s*[:=]\s*["][^"]{8,}'
+  'api[_-]?key\s*[:=]\s*["][^"]{8,}'
+  'token\s*[:=]\s*["][^"]{8,}'
+  'mongodb(\+srv)?://[^\s]+'                   # MongoDB connection string
+  'postgres(ql)?://[^\s]*:[^\s]*@'             # PostgreSQL with password
+  'mysql://[^\s]*:[^\s]*@'                     # MySQL with password
+  'redis://[^\s]*:[^\s]*@'                     # Redis with password
+
+  # Cloud provider secrets
+  'AZURE_[A-Z_]*_KEY\s*[:=]\s*["\x27][^\s"'\'']{8,}'
+  'GOOGLE_[A-Z_]*_KEY\s*[:=]\s*["\x27][^\s"'\'']{8,}'
+)
+
+# Files to skip (binaries, lockfiles, this hook itself)
+SKIP_PATTERNS='\.png$|\.jpg$|\.gif$|\.woff|\.lock$|\.lockb$|node_modules|\.git/|pre-push$|\.test\.'
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+# Only block on public repos; warn on private
+is_public=false
+if check_public_repo; then
+  is_public=true
+  echo -e "${YELLOW}⚠️  Public repo detected — scanning for secrets...${NC}"
+else
+  echo -e "🔒 Private/unknown repo — scanning for secrets (advisory only)..."
+fi
+
+# Get the range of commits being pushed
+remote="$1"
+url="$2"
+
+found_secrets=false
+found_files=""
+
+while read -r local_ref local_oid remote_ref remote_oid; do
+  # Skip delete pushes
+  if [[ "$local_oid" == "0000000000000000000000000000000000000000" ]]; then
+    continue
+  fi
+
+  # Determine diff range
+  if [[ "$remote_oid" == "0000000000000000000000000000000000000000" ]]; then
+    # New branch — check all commits
+    range="$local_oid"
+  else
+    range="${remote_oid}..${local_oid}"
+  fi
+
+  # Get diff of commits being pushed
+  diff_output=$(git diff "$range" --unified=0 --diff-filter=ACMR 2>/dev/null || git diff HEAD~5..HEAD --unified=0 --diff-filter=ACMR 2>/dev/null || echo "")
+
+  if [[ -z "$diff_output" ]]; then
+    continue
+  fi
+
+  for pattern in "${SECRET_PATTERNS[@]}"; do
+    matches=$(echo "$diff_output" | grep -E "^\+" | grep -v "^+++" | grep -Ei -- "$pattern" | grep -Ev "$SKIP_PATTERNS" || true)
+    if [[ -n "$matches" ]]; then
+      found_secrets=true
+      while IFS= read -r line; do
+        # Truncate long lines
+        display="${line:0:120}"
+        if [[ ${#line} -gt 120 ]]; then
+          display="${display}..."
+        fi
+        found_files="${found_files}\n  ${RED}${display}${NC}"
+      done <<< "$matches"
+    fi
+  done
+done
+
+if [[ "$found_secrets" == true ]]; then
+  echo ""
+  echo -e "${RED}🚨 POTENTIAL SECRETS DETECTED IN PUSH!${NC}"
+  echo -e "${found_files}"
+  echo ""
+
+  if [[ "$is_public" == true ]]; then
+    echo -e "${RED}❌ BLOCKED: This is a PUBLIC repository. Secrets must not be pushed.${NC}"
+    echo ""
+    echo "  If these are false positives, bypass with:  git push --no-verify"
+    echo "  To remove secrets: git reset HEAD~1, fix, then re-commit."
+    echo ""
+    exit 1
+  else
+    echo -e "${YELLOW}⚠️  Warning: Potential secrets found (private repo — push allowed).${NC}"
+    echo ""
+  fi
+else
+  echo -e "✅ No secrets detected. Push OK."
+fi
+
+exit 0
